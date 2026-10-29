@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resultado · Sorteio de Filmes e Séries</title>
+  <script src="{{ url_for('static', filename='tema.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  {# Campos escondidos que repetem os filtros da pesquisa #}
+  {% macro campos(f) %}
+    <input type="hidden" name="tipo" value="{{ f.tipo }}">
+    {% for g in f.generos %}
+      <input type="hidden" name="generos" value="{{ g }}">
+    {% endfor %}
+    {% for p in f.plataformas %}
+      <input type="hidden" name="plataformas" value="{{ p }}">
+    {% endfor %}
+    <input type="hidden" name="ano_de" value="{{ f.ano_de }}">
+    <input type="hidden" name="ano_ate" value="{{ f.ano_ate }}">
+  {% endmacro %}
+
+  <button type="button" class="tema-botao" id="tema-botao" aria-label="Alternar entre tema claro e escuro">
+    <svg class="icone icone-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg class="icone icone-lua" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+
+  {% if filme and filme.fundo %}
+    <div class="fundo" style="background-image: url('https://image.tmdb.org/t/p/w780{{ filme.fundo }}');"></div>
+  {% else %}
+    <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+  {% endif %}
+
+  <div class="container">
+    {% if filme %}
+      <div class="card">
+        {% if filme.poster %}
+          <img src="https://image.tmdb.org/t/p/w300{{ filme.poster }}" alt="Pôster de {{ filme.titulo }}">
+        {% endif %}
+        <div class="info">
+          <span class="tag">{{ "Filme" if filme.tipo == "filme" else "Série" }}</span>
+
+          <h1>
+            {{ filme.titulo }}
+            {% if filme.ano %}
+              <span class="ano">({{ filme.ano }})</span>
+            {% endif %}
+          </h1>
+
+          {% if filme.nota %}
+            <div class="estrelas" title="{{ estrelas }} de 5 estrelas">
+              <span class="cheias" style="--p: {{ porcentagem }}; width: calc(var(--p) * 1%)">★★★★★</span>
+              ★★★★★
+            </div>
+          {% endif %}
+
+          <p>{{ filme.sinopse }}</p>
+
+          {% if onde_assistir %}
+            <h2 class="onde">Disponível em</h2>
+            <div class="logos">
+              {% for p in onde_assistir %}
+                <a href="{{ p.link }}" target="_blank" rel="noopener" title="Assistir na {{ p.nome }}">
+                  <img src="https://image.tmdb.org/t/p/w92{{ p.logo }}" alt="{{ p.nome }}">
+                </a>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <form method="post" action="/resultado">
+        {{ campos(filtros) }}
+        <button type="submit" class="botao-principal">
+          <svg class="icone" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+          Sortear outro
+        </button>
+      </form>
+
+      {% if relacionados %}
+        <h2>Mais para você</h2>
+        <form method="post" action="/resultado">
+          {{ campos(filtros) }}
+          <input type="hidden" name="pagina" value="{{ filtros.pagina }}">
+          <div class="relacionados">
+            {% for r in relacionados %}
+              <button type="submit" name="escolhido" value="{{ r.id }}" class="mini" title="{{ r.titulo }}">
+                <img src="https://image.tmdb.org/t/p/w185{{ r.poster }}" alt="Pôster de {{ r.titulo }}">
+                <span>{{ r.titulo }}</span>
+              </button>
+            {% endfor %}
+          </div>
+        </form>
+      {% endif %}
+    {% else %}
+      <h1>Nada encontrado</h1>
+      <p class="subtitulo">Tente outros filtros.</p>
+    {% endif %}
+
+   <div class="credito">
+  <img src="{{ url_for('static', filename='tmdb.svg') }}" alt="TMDB" class="logo-tmdb">
+  <p>This product uses the TMDB API but is not endorsed or certified by TMDB.<br>
+  Streaming availability data provided by JustWatch.</p>
+</div>
+    <a class="voltar" href="/">← Mudar filtros</a>
+  </div>
+</body>
+</html>
