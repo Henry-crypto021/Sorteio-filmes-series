@@ -1,0 +1,5 @@
+chave.py
+*.zip
+__pycache__/
+venv/
+.venv/
