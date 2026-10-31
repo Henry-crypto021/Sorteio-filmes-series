@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quero assistir - Sorteio de Filmes e Séries</title>
+  <script src="{{ url_for('static', filename='tema.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='roleta.js') }}"></script>
+</head>
+<body>
+  {% include "barra.html" %}
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <div class="container">
+    <h1 class="titulo">Quero assistir</h1>
+    <p class="subtitulo">Os títulos que você guardou para ver depois.</p>
+
+    {% if not lista %}
+      <p>Sua lista está vazia. Ao sortear ou buscar algo, use o botão "Quero assistir" para guardar aqui.</p>
+    {% endif %}
+
+    {% if lista %}
+      <form method="post" action="/quero-assistir/sortear">
+        <input type="hidden" name="csrf" value="{{ csrf_token }}">
+        <button type="submit" class="botao-principal">
+          <svg class="icone" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+          Sortear da minha lista
+        </button>
+      </form>
+    {% endif %}
+
+    <div class="grade-busca">
+      {% for t in lista %}
+        <div class="item-quero">
+          <a href="/titulo/{{ t.tipo }}/{{ t.tmdb_id }}">
+            {% if t.poster %}
+              <img src="https://image.tmdb.org/t/p/w342{{ t.poster }}" alt="{{ t.titulo }}" loading="lazy">
+            {% endif %}
+            <span>{{ t.titulo }}{% if t.ano %} ({{ t.ano }}){% endif %}</span>
+          </a>
+          <form method="post" action="/remover-quero">
+            <input type="hidden" name="csrf" value="{{ csrf_token }}">
+            <input type="hidden" name="tipo" value="{{ t.tipo }}">
+            <input type="hidden" name="tmdb_id" value="{{ t.tmdb_id }}">
+            <button type="submit" class="botao-remover">Remover</button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+</html>

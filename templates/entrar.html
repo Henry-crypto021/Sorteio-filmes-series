@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block titulo %}Entrar · Sorteio de Filmes e Séries{% endblock %}
+
+{% block conteudo %}
+  <h1 class="titulo">Entrar</h1>
+  <p class="subtitulo">Acesse sua conta para salvar o que você assistiu.</p>
+
+  <form method="post" action="/entrar" class="form-conta">
+    <input type="hidden" name="csrf" value="{{ csrf_token }}">
+
+    {% if erro %}
+      <p class="erro">{{ erro }}</p>
+    {% endif %}
+
+    <label class="campo">
+      <span>Usuário</span>
+      <input type="text" name="nome" value="{{ nome }}" required maxlength="20" autocomplete="username">
+    </label>
+
+    <label class="campo">
+      <span>Senha</span>
+      <input type="password" name="senha" required maxlength="128" autocomplete="current-password">
+    </label>
+
+    <button type="submit" class="botao-principal">Entrar</button>
+  </form>
+
+  <p class="troca">Ainda não tem conta? <a href="/cadastro">Criar conta</a></p>
+{% endblock %}

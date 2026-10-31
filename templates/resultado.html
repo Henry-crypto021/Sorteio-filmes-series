@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  {% include "barra.html" %}
+
   {# Campos escondidos que repetem os filtros da pesquisa #}
   {% macro campos(f) %}
     <input type="hidden" name="tipo" value="{{ f.tipo }}">
@@ -19,6 +21,12 @@
     {% endfor %}
     <input type="hidden" name="ano_de" value="{{ f.ano_de }}">
     <input type="hidden" name="ano_ate" value="{{ f.ano_ate }}">
+    {% if f.esconder %}
+      <input type="hidden" name="esconder_vistos" value="1">
+    {% endif %}
+    <input type="hidden" name="nota_min" value="{{ f.nota_min }}">
+    <input type="hidden" name="duracao_max" value="{{ f.duracao_max }}">
+    <input type="hidden" name="classificacao" value="{{ f.classificacao }}">
   {% endmacro %}
 
   <button type="button" class="tema-botao" id="tema-botao" aria-label="Alternar entre tema claro e escuro">
@@ -27,7 +35,7 @@
   </button>
 
   {% if filme and filme.fundo %}
-    <div class="fundo" style="background-image: url('https://image.tmdb.org/t/p/w780{{ filme.fundo }}');"></div>
+   <div class="fundo" style="background-image: url('https://image.tmdb.org/t/p/w500{{ filme.fundo }}');"></div>
   {% else %}
     <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
   {% endif %}
@@ -40,6 +48,7 @@
         {% endif %}
         <div class="info">
           <span class="tag">{{ "Filme" if filme.tipo == "filme" else "Série" }}</span>
+          {% if grupo_msg %}<p class="aviso-grupo">{{ grupo_msg }}</p>{% endif %}
 
           <h1>
             {{ filme.titulo }}
@@ -55,6 +64,14 @@
             </div>
           {% endif %}
 
+          <p class="nota-comunidade">
+            {% if comunidade %}
+              Comunidade: <strong>{{ comunidade.texto }}</strong>
+            {% else %}
+              Ainda sem avaliações da comunidade
+            {% endif %}
+          </p>
+
           <p>{{ filme.sinopse }}</p>
 
           {% if onde_assistir %}
@@ -67,16 +84,93 @@
               {% endfor %}
             </div>
           {% endif %}
+
+          {% if trailer %}
+            <div class="acoes-card">
+              <a href="{{ trailer }}" target="_blank" rel="noopener" class="botao-assistido botao-trailer">
+                <svg class="icone" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span>Ver trailer</span>
+              </a>
+            </div>
+          {% endif %}
+
+          {% if usuario %}
+            <div class="acoes-card">
+              <button type="button" id="botao-quero"
+                      class="botao-assistido {{ 'ativo' if ja_quero else '' }}"
+                      data-csrf="{{ csrf_token }}" data-tipo="{{ filme.tipo }}" data-id="{{ filme.id }}">
+                <svg class="icone" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                <span>{{ "Na lista" if ja_quero else "Quero assistir" }}</span>
+              </button>
+
+              <button type="button" id="botao-assistido"
+                      class="botao-assistido {{ 'ativo' if ja_assistiu else '' }}"
+                      data-csrf="{{ csrf_token }}" data-tipo="{{ filme.tipo }}" data-id="{{ filme.id }}">
+                <svg class="icone" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>{{ "Assistido" if ja_assistiu else "Já assisti" }}</span>
+              </button>
+
+              <a href="/avaliar/{{ filme.tipo }}/{{ filme.id }}" class="botao-assistido">
+                <svg class="icone" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span>Avaliar</span>
+              </a>
+            </div>
+          {% else %}
+            <a href="/entrar" class="botao-assistido">Entre para salvar e avaliar</a>
+          {% endif %}
+
+          <details class="comentarios">
+            <summary>Avaliações da comunidade ({{ comentarios|length }})</summary>
+            {% if not comentarios %}
+              <p class="comentario">Ninguém avaliou ainda. Seja a primeira pessoa!</p>
+            {% endif %}
+            {% for c in comentarios %}
+              <div class="comentario">
+                <div class="comentario-topo">
+                  <span><strong>{{ c.autor }}</strong> <span class="estrelas-mini">{{ "★" * c.nota }}{{ "☆" * (5 - c.nota) }}</span></span>
+                  <span>{{ c.data }}</span>
+                </div>
+                {% if c.comentario %}<p>{{ c.comentario }}</p>{% endif %}
+                {% if usuario and not c.minha %}
+                  <form method="post" action="/avaliacoes/{{ c.id }}/denunciar" onsubmit="return confirm('Denunciar este comentário?');">
+                    <input type="hidden" name="csrf" value="{{ csrf_token }}">
+                    <button type="submit" class="denunciar">Denunciar</button>
+                  </form>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </details>
         </div>
       </div>
 
-      <form method="post" action="/resultado">
-        {{ campos(filtros) }}
-        <button type="submit" class="botao-principal">
-          <svg class="icone" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
-          Sortear outro
-        </button>
-      </form>
+      {% if grupo_campos %}
+        <form method="post" action="/grupo">
+          <input type="hidden" name="csrf" value="{{ csrf_token }}">
+          {% for nome, valor in grupo_campos %}
+            <input type="hidden" name="{{ nome }}" value="{{ valor }}">
+          {% endfor %}
+          <button type="submit" class="botao-principal">
+            <svg class="icone" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+            Sortear outro para o grupo
+          </button>
+        </form>
+      {% elif da_lista %}
+        <form method="post" action="/quero-assistir/sortear">
+          <input type="hidden" name="csrf" value="{{ csrf_token }}">
+          <button type="submit" class="botao-principal">
+            <svg class="icone" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+            Sortear outro da lista
+          </button>
+        </form>
+      {% else %}
+        <form method="post" action="/resultado">
+          {{ campos(filtros) }}
+          <button type="submit" class="botao-principal">
+            <svg class="icone" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+            Sortear outro
+          </button>
+        </form>
+      {% endif %}
 
       {% if relacionados %}
         <h2>Mais para você</h2>
@@ -98,12 +192,96 @@
       <p class="subtitulo">Tente outros filtros.</p>
     {% endif %}
 
-   <div class="credito">
-  <img src="{{ url_for('static', filename='tmdb.svg') }}" alt="TMDB" class="logo-tmdb">
-  <p>This product uses the TMDB API but is not endorsed or certified by TMDB.<br>
-  Streaming availability data provided by JustWatch.</p>
-</div>
+    {% if pool %}
+      <div id="roleta-pool" hidden>
+        {% for p in pool %}<img src="https://image.tmdb.org/t/p/w185{{ p }}" alt="">{% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="credito">
+      <img src="{{ url_for('static', filename='tmdb.svg') }}" alt="TMDB" class="logo-tmdb">
+      <p>This product uses the TMDB API but is not endorsed or certified by TMDB.<br>
+      Streaming availability data provided by JustWatch.</p>
+    </div>
     <a class="voltar" href="/">← Mudar filtros</a>
   </div>
+
+  <script>
+    // Botão "Já assisti": salva sem recarregar a página
+    const botaoAssistido = document.getElementById("botao-assistido");
+
+    function marcar(assistido) {
+      botaoAssistido.classList.toggle("ativo", assistido);
+      botaoAssistido.querySelector("span").textContent = assistido ? "Assistido" : "Já assisti";
+    }
+
+    if (botaoAssistido) {
+      botaoAssistido.addEventListener("click", async function () {
+        const dados = new FormData();
+        dados.append("csrf", botaoAssistido.dataset.csrf);
+        dados.append("tipo", botaoAssistido.dataset.tipo);
+        dados.append("tmdb_id", botaoAssistido.dataset.id);
+
+        botaoAssistido.disabled = true;
+        try {
+          const resposta = await fetch("/assistido", { method: "POST", body: dados });
+
+          if (resposta.status === 401) {
+            window.location.href = "/entrar";
+            return;
+          }
+
+          const resultado = await resposta.json();
+          if (resposta.ok) {
+            marcar(resultado.assistido);
+          } else {
+            alert(resultado.erro || "Não foi possível salvar agora.");
+          }
+        } catch (erro) {
+          alert("Não foi possível salvar agora. Tente de novo.");
+        } finally {
+          botaoAssistido.disabled = false;
+        }
+      });
+    }
+
+    // Botão "Quero assistir": adiciona ou tira da lista sem recarregar
+    const botaoQuero = document.getElementById("botao-quero");
+
+    function marcarQuero(quero) {
+      botaoQuero.classList.toggle("ativo", quero);
+      botaoQuero.querySelector("span").textContent = quero ? "Na lista" : "Quero assistir";
+    }
+
+    if (botaoQuero) {
+      botaoQuero.addEventListener("click", async function () {
+        const dados = new FormData();
+        dados.append("csrf", botaoQuero.dataset.csrf);
+        dados.append("tipo", botaoQuero.dataset.tipo);
+        dados.append("tmdb_id", botaoQuero.dataset.id);
+
+        botaoQuero.disabled = true;
+        try {
+          const resposta = await fetch("/quero", { method: "POST", body: dados });
+
+          if (resposta.status === 401) {
+            window.location.href = "/entrar";
+            return;
+          }
+
+          const resultado = await resposta.json();
+          if (resposta.ok) {
+            marcarQuero(resultado.quero);
+          } else {
+            alert(resultado.erro || "Não foi possível salvar agora.");
+          }
+        } catch (erro) {
+          alert("Não foi possível salvar agora. Tente de novo.");
+        } finally {
+          botaoQuero.disabled = false;
+        }
+      });
+    }
+  </script>
 </body>
 </html>

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block titulo %}Recentes · Sorteio de Filmes e Séries{% endblock %}
+
+{# Deixa vazio para esta página usar a largura normal, não a estreita #}
+{% block classe_container %}{% endblock %}
+
+{% block conteudo %}
+  <h1 class="titulo">Recentes</h1>
+  <p class="subtitulo">O que você já assistiu, do mais novo para o mais antigo.</p>
+
+  {% if lista %}
+    <div class="recentes">
+      {% for f in lista %}
+        <div class="recente">
+          {% if f.poster %}
+            <img src="https://image.tmdb.org/t/p/w185{{ f.poster }}" alt="Pôster de {{ f.titulo }}">
+          {% else %}
+            <div class="sem-poster"></div>
+          {% endif %}
+
+          <form method="post" action="/remover-assistido" class="remover-form"
+                onsubmit="return confirm('Remover este título dos recentes?');">
+            <input type="hidden" name="csrf" value="{{ csrf_token }}">
+            <input type="hidden" name="tipo" value="{{ f.tipo }}">
+            <input type="hidden" name="tmdb_id" value="{{ f.tmdb_id }}">
+            <button type="submit" class="remover" title="Remover dos recentes"
+                    aria-label="Remover {{ f.titulo }} dos recentes">
+              <svg class="icone" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </form>
+
+          <strong>{{ f.titulo }}</strong>
+          <span>{{ f.ano }} · {{ "Filme" if f.tipo == "filme" else "Série" }}</span>
+          <small>Visto em {{ f.data }}</small>
+                    <a class="avaliar-link" href="/avaliar/{{ f.tipo }}/{{ f.tmdb_id }}">Avaliar</a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="vazio">Você ainda não marcou nada como assistido. Sorteie um título e clique em "Já assisti".</p>
+  {% endif %}
+{% endblock %}

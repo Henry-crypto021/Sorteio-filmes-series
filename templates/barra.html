@@ -1,0 +1,32 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;500;600;700&display=swap">
+
+{% set caminho = request.path %}
+<nav class="barra-usuario" aria-label="Menu principal">
+  <a class="barra-link {{ 'ativo' if caminho == '/' }}" href="/">Início</a>
+  <a class="barra-link {{ 'ativo' if caminho.startswith('/avaliacoes') }}" href="/avaliacoes">Avaliações</a>
+  <a class="barra-link {{ 'ativo' if caminho.startswith('/ranking') }}" href="/ranking">Ranking</a>
+  <a class="barra-link {{ 'ativo' if caminho.startswith('/grupo') }}" href="/grupo">Grupo</a>
+
+  {% if usuario %}
+    <a class="barra-link {{ 'ativo' if caminho.startswith('/recentes') }}" href="/recentes">Recentes</a>
+    <a class="barra-link {{ 'ativo' if caminho.startswith('/quero-assistir') }}" href="/quero-assistir">Quero assistir</a>
+    <a class="barra-link {{ 'ativo' if caminho.startswith('/estatisticas') }}" href="/estatisticas">Estatísticas</a>
+    <a class="barra-link {{ 'ativo' if caminho.startswith('/minha-conta') }}" href="/minha-conta">Minha conta</a>
+    {% if usuario_admin %}
+      <a class="barra-link {{ 'ativo' if caminho.startswith('/moderacao') }}" href="/moderacao">Moderação</a>
+    {% endif %}
+    <span class="barra-nome"><span class="avatar">{{ usuario[0]|upper }}</span>{{ usuario }}</span>
+    <form class="barra-form" method="post" action="/sair">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}">
+      <button type="submit" class="barra-link sair">Sair</button>
+    </form>
+  {% else %}
+    <a class="barra-link" href="/entrar">Entrar</a>
+    <a class="barra-link destaque" href="/cadastro">Criar conta</a>
+  {% endif %}
+</nav>
+
+<script src="{{ url_for('static', filename='roleta.js') }}"></script>
+<script src="{{ url_for('static', filename='carregando.js') }}"></script>

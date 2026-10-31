@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minhas estatísticas - Sorteio de Filmes e Séries</title>
+  <script src="{{ url_for('static', filename='tema.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  {% include "barra.html" %}
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <div class="container">
+    <h1 class="titulo">Minhas estatísticas</h1>
+    <p class="subtitulo">Seu cantinho de cinéfilo{% if desde %} · aqui desde {{ desde }}{% endif %}.</p>
+
+    <div class="stat-grade">
+      <div class="stat-card"><span class="stat-numero">{{ total }}</span><span class="stat-rotulo">Assistidos</span></div>
+      <div class="stat-card"><span class="stat-numero">{{ filmes }}</span><span class="stat-rotulo">Filmes</span></div>
+      <div class="stat-card"><span class="stat-numero">{{ series }}</span><span class="stat-rotulo">Séries</span></div>
+      <div class="stat-card"><span class="stat-numero">{{ avaliacoes }}</span><span class="stat-rotulo">Avaliações</span></div>
+      <div class="stat-card"><span class="stat-numero">{{ media or "—" }}</span><span class="stat-rotulo">Média das suas notas</span></div>
+      <div class="stat-card"><span class="stat-numero">{{ quero }}</span><span class="stat-rotulo">Na lista</span></div>
+    </div>
+
+    {% if total %}
+      <div class="stat-bloco">
+        <h2>Filmes ou séries?</h2>
+        <div class="barra-tipo">
+        <span data-largura="{{ pct_filmes }}"></span>
+        <span data-largura="{{ 100 - pct_filmes }}"></span>
+        </div>
+        <div class="legenda-tipo">
+          <span>🎬 Filmes · {{ pct_filmes }}%</span>
+          <span>📺 Séries · {{ 100 - pct_filmes }}%</span>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if avaliacoes %}
+      <div class="stat-bloco">
+        <h2>Como você avalia</h2>
+        {% for d in distribuicao %}
+          <div class="dist-linha">
+            <span class="dist-nota">{{ d.nota }} ★</span>
+          <div class="dist-barra"><span data-largura="{{ d.pct }}"></span></div>
+            <span class="dist-qtd">{{ d.total }}</span>
+          </div>
+        {% endfor %}
+      </div>
+
+      <h2>Seus favoritos</h2>
+      <div class="recentes">
+        {% for m in melhores %}
+          <a class="recente" href="/titulo/{{ m.tipo }}/{{ m.tmdb_id }}">
+            {% if m.poster %}
+              <img src="https://image.tmdb.org/t/p/w342{{ m.poster }}" alt="Pôster de {{ m.titulo }}" loading="lazy">
+            {% else %}
+              <div class="sem-poster"></div>
+            {% endif %}
+            <strong>{{ m.titulo }}</strong>
+            <span>{{ "★" * m.nota }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if not total and not avaliacoes %}
+      <p class="vazio">Marque títulos como "Já assisti" e avalie para ver seus números aqui.</p>
+    {% endif %}
+  </div>
+</body>
+</html>

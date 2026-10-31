@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block titulo %}Criar conta · Sorteio de Filmes e Séries{% endblock %}
+
+{% block conteudo %}
+  <h1 class="titulo">Criar conta</h1>
+  <p class="subtitulo">Só usuário e senha. Não pedimos e-mail.</p>
+
+  <form method="post" action="/cadastro" class="form-conta">
+    <input type="hidden" name="csrf" value="{{ csrf_token }}">
+
+    {% if erro %}
+      <p class="erro">{{ erro }}</p>
+    {% endif %}
+
+    <label class="campo">
+      <span>Usuário (3 a 20: letras, números e _)</span>
+      <input type="text" name="nome" value="{{ nome }}" required minlength="3" maxlength="20" autocomplete="username">
+    </label>
+
+    <label class="campo">
+      <span>Senha (mínimo 8 caracteres)</span>
+      <input type="password" name="senha" required minlength="8" maxlength="128" autocomplete="new-password">
+    </label>
+
+    <label class="campo">
+      <span>Repita a senha</span>
+      <input type="password" name="confirmar" required minlength="8" maxlength="128" autocomplete="new-password">
+    </label>
+
+    <button type="submit" class="botao-principal">Criar conta</button>
+  </form>
+
+  <p class="troca">Já tem conta? <a href="/entrar">Entrar</a></p>
+{% endblock %}

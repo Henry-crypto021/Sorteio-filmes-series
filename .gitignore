@@ -3,3 +3,7 @@ chave.py
 __pycache__/
 venv/
 .venv/
+
+chave.py
+banco.db
+*.zip

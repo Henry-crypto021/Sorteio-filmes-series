@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minha conta - Sorteio de Filmes e Séries</title>
+  <script src="{{ url_for('static', filename='tema.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  {% include "barra.html" %}
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <div class="container">
+    <h1 class="titulo">Minha conta</h1>
+    <p class="subtitulo">Olá, {{ usuario }}.</p>
+
+    <h2>Minhas avaliações</h2>
+    {% if not minhas %}
+      <p>Você ainda não avaliou nada.</p>
+    {% endif %}
+    <div class="lista-conta">
+      {% for a in minhas %}
+        <div class="linha-conta">
+          <div>
+            <strong>{{ a.titulo }}{% if a.ano %} ({{ a.ano }}){% endif %}</strong>
+            <div>{{ "★" * a.nota }}{{ "☆" * (5 - a.nota) }}</div>
+            {% if a.comentario %}<p>{{ a.comentario }}</p>{% endif %}
+          </div>
+          <a href="/avaliar/{{ a.tipo }}/{{ a.tmdb_id }}" class="barra-link">Editar</a>
+        </div>
+      {% endfor %}
+    </div>
+
+    <h2>Trocar senha</h2>
+    <form method="post" action="/minha-conta/senha" class="form-conta">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}">
+      <input type="password" name="atual" placeholder="Senha atual" required autocomplete="current-password">
+      <input type="password" name="nova" placeholder="Nova senha (mínimo 8 caracteres)" required minlength="8" maxlength="128" autocomplete="new-password">
+      <input type="password" name="confirmar" placeholder="Repita a nova senha" required minlength="8" maxlength="128" autocomplete="new-password">
+      <button type="submit">Trocar senha</button>
+    </form>
+
+    {% if not admin %}
+      <h2>Excluir conta</h2>
+      <form method="post" action="/minha-conta/excluir" class="form-conta zona-perigo"
+            onsubmit="return confirm('Tem certeza? Isso apaga sua conta, avaliações e listas, e não dá para desfazer.');">
+        <input type="hidden" name="csrf" value="{{ csrf_token }}">
+        <p>Isso apaga sua conta, suas avaliações e suas listas. Não dá para desfazer.</p>
+        <input type="password" name="senha" placeholder="Digite sua senha para confirmar" required autocomplete="current-password">
+        <button type="submit">Excluir minha conta</button>
+      </form>
+    {% endif %}
+  </div>
+</body>
+</html>

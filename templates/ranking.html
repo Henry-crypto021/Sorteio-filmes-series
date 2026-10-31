@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ranking - Sorteio de Filmes e Séries</title>
+  <script src="{{ url_for('static', filename='tema.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  {% include "barra.html" %}
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <div class="container">
+    <h1 class="titulo">Ranking</h1>
+    <p class="subtitulo">Os títulos mais bem avaliados pela comunidade.</p>
+
+    {% if not lista %}
+      <p class="vazio">Ainda não há avaliações. Seja a primeira pessoa a avaliar um título!</p>
+    {% endif %}
+
+    <div class="ranking">
+      {% for t in lista %}
+        <a class="ranking-item" href="/titulo/{{ t.tipo }}/{{ t.tmdb_id }}">
+          <span class="ranking-pos">
+            {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}
+          </span>
+          {% if t.poster %}
+            <img src="https://image.tmdb.org/t/p/w185{{ t.poster }}" alt="Pôster de {{ t.titulo }}" loading="lazy">
+          {% else %}
+            <div class="sem-poster"></div>
+          {% endif %}
+          <div class="ranking-info">
+            <strong>{{ t.titulo }}{% if t.ano %} <span class="ano">({{ t.ano }})</span>{% endif %}</strong>
+            <div class="estrelas pequena"><span class="cheias" style="--p: {{ t.porcentagem }}">★★★★★</span>★★★★★</div>
+            <small>{{ t.media }} de 5 · {{ t.total }} {{ "avaliação" if t.total == 1 else "avaliações" }}</small>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Moderação</h1>
+{% if not lista %}<p>Nada denunciado por enquanto.</p>{% endif %}
+{% for a in lista %}
+<div>
+  <strong>{{ a.titulo }}</strong> · {{ a.nota }}/5 · por {{ a.autor }}
+  · {{ a.total }} denúncia(s){% if a.escondido %} · <em>escondido</em>{% endif %}
+  <p>{{ a.comentario }}</p>
+  {% if not a.escondido %}
+<form method="post" action="/moderacao/{{ a.id }}/esconder" style="display:inline"><input type="hidden" name="csrf" value="{{ csrf_token }}"><button>Esconder</button></form>
+ <form method="post" action="/moderacao/{{ a.id }}/limpar" style="display:inline"><input type="hidden" name="csrf" value="{{ csrf_token }}"><button>Dispensar denúncias</button></form>
+  {% else %}
+  <form method="post" action="/moderacao/{{ a.id }}/mostrar" style="display:inline"><input type="hidden" name="csrf" value="{{ csrf_token }}"><button>Mostrar de novo</button></form>
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock %}
